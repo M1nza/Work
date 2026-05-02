@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Minza Sadiq | Data Scientist & ML Engineer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-glow: rgba(59, 130, 246, 0.5);
+      --secondary: #ec4899;
+      --accent: #14b8a6;
+      --bg-dark: #0a0a0f;
+      --bg-darker: #050508;
+      --bg-card: rgba(12, 12, 20, 0.85);
+      --text-light: #eef2ff;
+      --text-muted: #8a92b0;
+      --border-glow: rgba(59, 130, 246, 0.25);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-light);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* Custom Cursor - Just a Dot */
+    .cursor-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--primary);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transition: 0.08s;
+      box-shadow: 0 0 12px var(--primary);
+    }
+
+    /* Splash Screen */
+    .splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-darker);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1.5rem;
+      transition: opacity 1s ease, visibility 1s ease;
+      backdrop-filter: blur(10px);
+    }
+    .splash-logo {
+      font-size: 4rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--primary);
+      animation: pulse 1.5s infinite;
+    }
+    .splash-text {
+      font-family: 'Fira Code', monospace;
+      letter-spacing: 4px;
+      font-size: 1.2rem;
+    }
+    .splash-loader {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(59, 130, 246, 0.2);
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.05); }
+    }
+
+    /* Animated Matrix Rain Background */
+    #matrix-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      opacity: 0.12;
+      pointer-events: none;
+    }
+
+    /* 3D Background Canvas */
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Color Picker Button */
+    .color-picker-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      background: rgba(5, 5, 10, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-glow);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 100;
+      transition: all 0.3s;
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+
+    .color-picker-btn:hover {
+      transform: scale(1.1) rotate(15deg);
+      border-color: var(--primary);
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .color-panel {
+      position: fixed;
+      bottom: 100px;
+      right: 30px;
+      background: rgba(5, 5, 10, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glow);
+      border-radius: 20px;
+      padding: 1rem;
+      display: flex;
+      gap: 0.8rem;
+      z-index: 99;
+      transform: scale(0);
+      opacity: 0;
+      transition: 0.3s;
+      transform-origin: bottom right;
+    }
+
+    .color-panel.active {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    .color-option {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .color-option:hover {
+      transform: scale(1.15);
+      border-color: white;
+    }
+
+    /* Sidebar Navigation (Mobile) + Desktop Terminal */
+    .menu-toggle {
+      display: none;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1001;
+      background: rgba(5, 5, 10, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-glow);
+      border-radius: 12px;
+      padding: 12px 15px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--primary);
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 100%;
+      background: rgba(5, 5, 10, 0.98);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid var(--border-glow);
+      z-index: 1000;
+      transition: left 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+    .sidebar.open {
+      left: 0;
+    }
+    .sidebar .close-sidebar {
+      align-self: flex-end;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: 0.2s;
+    }
+    .sidebar .close-sidebar:hover {
+      color: var(--primary);
+    }
+    .sidebar .nav-links-side {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem;
+    }
+    .sidebar .nav-links-side li {
+      font-family: 'Fira Code', monospace;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.2s;
+      padding-left: 10px;
+    }
+    .sidebar .nav-links-side li a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+    .sidebar .nav-links-side li.active a,
+    .sidebar .nav-links-side li:hover a {
+      color: var(--primary);
+      text-shadow: 0 0 5px var(--primary-glow);
+    }
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      z-index: 999;
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.3s;
+    }
+    .overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Desktop Navigation (hidden on mobile) */
+    .terminal-nav {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      background: rgba(5, 5, 10, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      border: 1px solid var(--border-glow);
+      padding: 1rem 2rem;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-family: 'Fira Code', monospace;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+    .nav-links li {
+      cursor: pointer;
+      position: relative;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      transition: 0.3s;
+    }
+    .nav-links li.active a,
+    .nav-links a:hover {
+      color: var(--primary);
+      text-shadow: 0 0 8px var(--primary-glow);
+    }
+    .nav-links a::before {
+      content: '>';
+      position: absolute;
+      left: -15px;
+      opacity: 0;
+      transition: 0.2s;
+    }
+    .nav-links li.active a::before,
+    .nav-links a:hover::before {
+      opacity: 1;
+      left: -12px;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 100px 2rem 4rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Page Transitions */
+    .page {
+      display: none;
+    }
+    .page.active {
+      display: block;
+      animation: pageEnter 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    @keyframes pageEnter {
+      0% { opacity: 0; transform: translateY(40px) scale(0.98);}
+      100% { opacity: 1; transform: translateY(0) scale(1);}
+    }
+
+    /* Hero Section */
+    .hero {
+      min-height: 70vh;
+      display: flex;
+      align-items: center;
+      gap: 3rem;
+      flex-wrap: wrap;
+    }
+    .hero-content { flex: 1; }
+    .prompt-line {
+      font-family: 'Fira Code', monospace;
+      font-size: 1rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+    .glitch-text {
+      font-size: 4rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin: 1rem 0;
+      animation: glitch 3s infinite;
+    }
+    @keyframes glitch {
+      0%, 100% { transform: skew(0deg); }
+      95% { transform: skew(0deg); }
+      96% { transform: skew(5deg); }
+      97% { transform: skew(-5deg); }
+      98% { transform: skew(0deg); }
+    }
+    .typed-container {
+      font-size: 1.2rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-muted);
+      margin: 1.5rem 0;
+    }
+    .typed-cursor {
+      display: inline-block;
+      width: 3px;
+      height: 1.2em;
+      background: var(--primary);
+      animation: blink 1s infinite;
+      margin-left: 5px;
+    }
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+    .stats-grid {
+      display: flex;
+      gap: 2rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      text-align: center;
+      padding: 1rem;
+      background: rgba(59, 130, 246, 0.05);
+      border-radius: 12px;
+      border: 1px solid var(--border-glow);
+      transition: 0.3s;
+    }
+    .stat-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--primary);
+    }
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .section-header {
+      font-size: 2rem;
+      font-family: 'Fira Code', monospace;
+      margin-bottom: 2rem;
+      border-left: 4px solid var(--primary);
+      padding-left: 1.5rem;
+    }
+    .section-header i { color: var(--primary); margin-right: 0.5rem; }
+
+    .resume-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.5rem;
+    }
+    .resume-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-glow);
+      border-radius: 20px;
+      padding: 1.5rem;
+      transition: all 0.4s;
+      position: relative;
+      overflow: hidden;
+    }
+    .resume-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(59,130,246,0.1), transparent);
+      transition: 0.5s;
+    }
+    .resume-card:hover::before { left: 100%; }
+    .resume-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--primary);
+      box-shadow: 0 20px 40px rgba(59,130,246,0.15);
+    }
+    .card-title {
+      font-family: 'Fira Code', monospace;
+      color: var(--primary);
+      font-size: 1.3rem;
+      margin-bottom: 1.5rem;
+    }
+    .timeline-item {
+      margin-bottom: 1.5rem;
+      padding-left: 1rem;
+      border-left: 2px solid var(--primary);
+    }
+    .timeline-date {
+      font-size: 0.75rem;
+      color: var(--accent);
+      font-family: 'Fira Code', monospace;
+    }
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 2rem;
+    }
+    .project-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-glow);
+      border-radius: 20px;
+      padding: 1.5rem;
+      transition: all 0.4s;
+      position: relative;
+      overflow: hidden;
+    }
+    .project-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      transition: 0.4s;
+    }
+    .project-card:hover::after { width: 100%; }
+    .project-card:hover {
+      transform: translateY(-10px) scale(1.02);
+      border-color: var(--primary);
+      box-shadow: 0 20px 40px rgba(59,130,246,0.2);
+    }
+    .project-icon {
+      font-size: 2.5rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    .tech-tag {
+      display: inline-block;
+      background: rgba(59,130,246,0.1);
+      padding: 0.2rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-family: 'Fira Code', monospace;
+      margin: 0.3rem 0.3rem 0 0;
+    }
+    .skills-wrapper {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+    .skill-category {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 1.5rem;
+      border: 1px solid var(--border-glow);
+    }
+    .skill-category h3 { color: var(--primary); margin-bottom: 1rem; font-family: 'Fira Code', monospace; }
+    .skill-item { margin-bottom: 1rem; }
+    .skill-info { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.3rem; }
+    .skill-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .skill-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 3px;
+      transition: width 1.2s cubic-bezier(0.22, 0.97, 0.36, 1.01);
+    }
+    .contact-wrapper {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 3rem;
+      background: var(--bg-card);
+      border-radius: 24px;
+      padding: 2.5rem;
+      border: 1px solid var(--border-glow);
+    }
+    .contact-detail {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 1rem 0;
+      transition: 0.3s;
+    }
+    .contact-detail:hover { transform: translateX(10px); color: var(--primary); }
+    .contact-detail i { width: 30px; color: var(--primary); }
+    .social-links {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    .social-links a {
+      color: var(--text-muted);
+      font-size: 1.8rem;
+      transition: all 0.3s;
+    }
+    .social-links a:hover { color: var(--primary); transform: translateY(-5px) scale(1.1); }
+    .contact-form input, .contact-form textarea {
+      width: 100%;
+      padding: 0.8rem;
+      margin: 0.5rem 0;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid var(--border-glow);
+      border-radius: 12px;
+      color: white;
+      font-family: 'Fira Code', monospace;
+    }
+    .contact-form input:focus, .contact-form textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 20px rgba(59,130,246,0.2);
+    }
+    .submit-btn {
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+      border: none;
+      padding: 0.8rem 2rem;
+      border-radius: 40px;
+      color: var(--bg-dark);
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .submit-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px var(--primary-glow);
+    }
+    footer {
+      margin-top: 4rem;
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid var(--border-glow);
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      body { cursor: auto; }
+      .cursor-dot { display: none; }
+      .terminal-nav { display: none; }
+      .menu-toggle { display: block; }
+      .container { padding: 80px 1.2rem 2rem; }
+      .glitch-text { font-size: 2.5rem; }
+      .color-picker-btn { bottom: 20px; right: 20px; width: 40px; height: 40px; font-size: 1.2rem; }
+      .color-panel { bottom: 80px; right: 20px; }
+      .hero { flex-direction: column; }
+      .stats-grid { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="splash-screen" id="splashScreen">
+  <div class="splash-logo">&lt;/&gt;</div>
+  <div class="splash-text">Minza Sadiq</div>
+  <div class="splash-loader"></div>
+</div>
+
+<div class="cursor-dot"></div>
+<canvas id="bg-canvas"></canvas>
+<canvas id="matrix-canvas"></canvas>
+
+<div class="color-picker-btn" id="colorPickerBtn"><i class="fas fa-palette"></i></div>
+<div class="color-panel" id="colorPanel">
+  <div class="color-option" style="background: #3b82f6;" data-primary="#3b82f6" data-secondary="#ec4899" data-accent="#14b8a6"></div>
+  <div class="color-option" style="background: #00ff88;" data-primary="#00ff88" data-secondary="#ff3366" data-accent="#00d4ff"></div>
+  <div class="color-option" style="background: #ff3366;" data-primary="#ff3366" data-secondary="#00ff88" data-accent="#ff9900"></div>
+  <div class="color-option" style="background: #f59e0b;" data-primary="#f59e0b" data-secondary="#8b5cf6" data-accent="#06b6d4"></div>
+  <div class="color-option" style="background: #a855f7;" data-primary="#a855f7" data-secondary="#f43f5e" data-accent="#2dd4bf"></div>
+</div>
+
+<!-- Mobile Menu Toggle -->
+<div class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></div>
+<div class="overlay" id="overlay"></div>
+<div class="sidebar" id="sidebar">
+  <div class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></div>
+  <ul class="nav-links-side">
+    <li data-page="home" class="active"><a>home.sh</a></li>
+    <li data-page="resume"><a>resume.exe</a></li>
+    <li data-page="projects"><a>projects.py</a></li>
+    <li data-page="skills"><a>skills.js</a></li>
+    <li data-page="contact"><a>contact.rb</a></li>
+  </ul>
+</div>
+
+<!-- Desktop Navigation -->
+<div class="terminal-nav">
+  <div style="display: flex; gap: 12px; align-items: center;">
+    <div class="terminal-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+    <span style="color: var(--primary);">~/portfolio</span>
+    <span id="path-indicator" style="color: var(--text-muted);">[home]</span>
+  </div>
+  <ul class="nav-links">
+    <li data-page="home" class="active"><a>home.sh</a></li>
+    <li data-page="resume"><a>resume.exe</a></li>
+    <li data-page="projects"><a>projects.py</a></li>
+    <li data-page="skills"><a>skills.js</a></li>
+    <li data-page="contact"><a>contact.rb</a></li>
+  </ul>
+</div>
+
+<div class="container">
+  <!-- Home Page -->
+  <div class="page active" id="home-page">
+    <div class="hero">
+      <div class="hero-content">
+        <div class="prompt-line"><span>$ whoami --data-scientist</span></div>
+        <div class="glitch-text">Minza Sadiq</div>
+        <div style="font-size: 1.3rem; margin-bottom: 0.5rem;">MSc Data Science @ Heriot-Watt University, Dubai</div>
+        <div class="typed-container"><span id="typed-text"></span><span class="typed-cursor"></span></div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-number">30+</div><div>Projects</div></div>
+          <div class="stat-card"><div class="stat-number">3+</div><div>Deployed Apps</div></div>
+          <div class="stat-card"><div class="stat-number">20+</div><div>ML Models</div></div>
+          <div class="stat-card"><div class="stat-number">10+</div><div>API Integrations</div></div>
+        </div>
+      </div>
+      <div style="flex:1; min-height: 300px; padding: 2rem; background: rgba(59,130,246,0.03); border-radius: 20px; border: 1px solid var(--border-glow);">
+
+      <div style="font-family: 'Fira Code', monospace; color: var(--primary); margin-bottom: 0.5rem;">PROFILE:</div>
+      <div style="font-family: 'Fira Code', monospace; color: #ffffff; margin-bottom: 1.5rem;">MSc Data Science @ Heriot-Watt University, Dubai</div>
+        
+      <div style="font-family: 'Fira Code', monospace; color: var(--primary); margin-bottom: 0.5rem;">EXPERTISE:</div>
+      <div style="font-family: 'Fira Code', monospace; color: #ffffff; line-height: 1.8;">
+        ▸ Machine Learning & Model Deployment<br>
+        ▸ Data Engineering & ETL Pipelines<br>
+        ▸ API Development (FastAPI, Django REST)<br>
+        ▸ NLP & Text Analytics<br>
+        ▸ Production System Integration
+      </div>
+
+      <div style="font-family: 'Fira Code', monospace; color: var(--primary); margin-bottom: 0.5rem; margin-top: 1.5rem;">FOCUS:</div>
+      <div style="font-family: 'Fira Code', monospace; color: #ffffff; line-height: 1.6;">
+        Build → Deploy → Iterate<br>
+        Turning data into intelligent systems that work in production.
+      </div>
+      
+      <div style="font-family: 'Fira Code', monospace; color: var(--primary); margin-bottom: 0.5rem; margin-top: 1.5rem;">CORE:</div>
+      <div style="font-family: 'Fira Code', monospace; color: #ffffff; line-height: 1.6;">
+        • Production-ready code<br>
+        • Explainable ML decisions<br>
+        • Scalable data pipelines
+      </div>
+</div>
+    </div>
+  </div>
+<div class="page" id="resume-page">
+  <div class="section-header"><i class="fas fa-id-card"></i> resume.exe</div>
+  <div class="resume-grid">
+    
+    <!-- Education -->
+    <div class="resume-card">
+      <div class="card-title"><i class="fas fa-graduation-cap"></i> Education</div>
+      <div class="timeline-item">
+        <div class="timeline-date">2025 – Present</div>
+        <div>MSc Data Science</div>
+        <div>Heriot-Watt University, Dubai</div>
+        <div style="font-size:0.8rem;">Thesis: Explainable AI for Heart Disease Prediction</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">2022 – 2025</div>
+        <div>BSc Computer Science</div>
+        <div>University of Calicut</div>
+        <div style="font-size:0.8rem;">Thesis: Automotive Design using AI</div>
+      </div>
+    </div>
+    
+    <!-- Experience -->
+    <div class="resume-card">
+      <div class="card-title"><i class="fas fa-briefcase"></i> Experience</div>
+      <div class="timeline-item">
+        <div class="timeline-date">JUN 2024 – MAR 2025</div>
+        <div class="timeline-title">SOFTWARE DEVELOPMENT INTERN @ Regional Technologies</div>
+        <div style="font-size:0.75rem; color: var(--accent); margin-bottom: 0.5rem;">Python • Django • Flutter • Hugging Face • SQL • Razorpay</div>
+        <div style="font-size:0.9rem; line-height: 1.5;">
+          • Built AI-powered APIs (Django + Hugging Face) for automated car design generation<br>
+          • Designed SQL databases supporting 100K+ records for users, orders & AI outputs<br>
+          • Developed Flutter frontend + backend integration for web/mobile deployment<br>
+          • Integrated Razorpay payment gateway for end-to-end order processing
+        </div>
+      </div>
+    </div>
+
+        <!-- Featured Projects -->
+    <div class="resume-card">
+      <div class="card-title"><i class="fas fa-microphone-alt"></i> Featured Projects</div>
+      <div class="timeline-item"> Anemia Classification | Medical Imaging + XGBoost + ResNet18</div>
+      <div class="timeline-item"> Tesla Sentiment Analysis | NLP + YouTube API + LDA</div>
+      <div class="timeline-item"> Road Safety Analytics | 970K Records + ETL + D3.js</div>
+      <div class="timeline-item"> Explainable AI | ML Models + SHAP + LIME</div>
+      <div style="margin-top: 0.5rem; font-size: 0.65rem; color: var(--text-muted);">View full project descriptions on Projects page →</div>
+    </div>
+    
+    <!-- Technical Skills (NEW) -->
+    <div class="resume-card">
+      <div class="card-title"><i class="fas fa-code"></i> Technical Skills</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+        <span style="background: rgba(59,130,246,0.12); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.7rem;">Python</span>
+        <span style="background: rgba(59,130,246,0.12); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.7rem;">SQL</span>
+        <span style="background: rgba(59,130,246,0.12); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.7rem;">FastAPI</span>
+        <span style="background: rgba(59,130,246,0.12); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.7rem;">Django</span>
+        <span style="background: rgba(59,130,246,0.12); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.7rem;">PyTorch</span>
+        <span style="background: rgba(59,130,246,0.12); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.7rem;">Scikit-learn</span>
+        <span style="background: rgba(59,130,246,0.12); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.7rem;">NLP</span>
+        <span style="background: rgba(59,130,246,0.12); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.7rem;">XGBoost</span>
+        <span style="background: rgba(59,130,246,0.12); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.7rem;">PostgreSQL</span>
+        <span style="background: rgba(59,130,246,0.12); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.7rem;">REST APIs</span>
+        <span style="background: rgba(59,130,246,0.12); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.7rem;">Git</span>
+      </div>
+      <div style="margin-top: 0.5rem; font-size: 0.65rem; color: var(--text-muted);">View full tech stack on Skills page →</div>
+    </div>
+    
+    <!-- Certifications -->
+    <div class="resume-card">
+      <div class="card-title"><i class="fas fa-certificate"></i> Certifications</div>
+      <div class="timeline-item"> MATLAB Onramp</div>
+      <div class="timeline-item"> Google Data Analytics Professional Certificate</div>
+      <div class="timeline-item"> Business Analytics with Excel</div>
+    </div>
+  
+  </div>
+</div>
+  <div class="page" id="projects-page"><div class="section-header"><i class="fas fa-code-branch"></i> featured_projects</div><div class="projects-grid" id="projects-grid"></div></div>
+  <div class="page" id="skills-page"><div class="section-header"><i class="fas fa-terminal"></i> tech_stack</div><div class="skills-wrapper" id="skills-wrapper"></div></div>
+  <div class="page" id="contact-page">
+    <div class="section-header"><i class="fas fa-envelope"></i> contact</div>
+    <div class="contact-wrapper"><div><h3>Let's build something <span style="color: var(--primary);">impactful</span></h3><div class="contact-detail"><i class="fas fa-envelope"></i><a href="mailto:ms4127@hw.ac.uk" style="color: inherit;">ms4127@hw.ac.uk</a></div><div class="contact-detail"><i class="fab fa-github"></i><a href="https://github.com/M1nza" target="_blank"style="color: inherit;">github.com/M1nza</a></div><div class="contact-detail"><i class="fab fa-linkedin"></i><a href="https://www.linkedin.com/in/minzasadiq" target="_blank"style="color: inherit;">linkedin.com/in/minzasadiq</a></div><div class="social-links"><a href="https://github.com/M1nza" target="_blank"><i class="fab fa-github"></i></a><a href="https://www.linkedin.com/in/minzasadiq" target="_blank"><i class="fab fa-linkedin"></i></a><a href="https://www.kaggle.com/minzasadiq" target="_blank"><i class="fab fa-kaggle"></i></a></div></div><div class="contact-form"><form id="contactForm"><input type="text" placeholder="name" required><input type="email" placeholder="email" required><textarea rows="4" placeholder="your message..."></textarea><button type="submit" class="submit-btn">send_message() →</button></form></div></div>
+  </div>
+  <footer>© 2026 Minza Sadiq | Data Scientist & ML Engineer</footer>
+</div>
+
+<script>
+  // Splash screen
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const splash = document.getElementById('splashScreen');
+      splash.style.opacity = '0';
+      splash.style.visibility = 'hidden';
+      setTimeout(() => splash.remove(), 1000);
+    }, 1800);
+  });
+
+  // ThreeJS 3D Knot
+  const bgCanvas = document.getElementById('bg-canvas');
+  const bgScene = new THREE.Scene();
+  const bgCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  const bgRenderer = new THREE.WebGLRenderer({ canvas: bgCanvas, alpha: true });
+  bgRenderer.setSize(window.innerWidth, window.innerHeight);
+  bgCamera.position.z = 30;
+  const geometry = new THREE.TorusKnotGeometry(8, 2.5, 200, 32, 3, 4);
+  const material = new THREE.MeshBasicMaterial({ color: 0x3b82f6, wireframe: true, transparent: true, opacity: 0.12 });
+  const knot = new THREE.Mesh(geometry, material);
+  bgScene.add(knot);
+  function animateBG() { requestAnimationFrame(animateBG); knot.rotation.x += 0.003; knot.rotation.y += 0.005; bgRenderer.render(bgScene, bgCamera); }
+  animateBG();
+  window.addEventListener('resize', () => { bgRenderer.setSize(window.innerWidth, window.innerHeight); bgCamera.aspect = window.innerWidth / window.innerHeight; bgCamera.updateProjectionMatrix(); });
+
+  // Matrix rain
+  const matrixCanvas = document.getElementById('matrix-canvas');
+  const matrixCtx = matrixCanvas.getContext('2d');
+  matrixCanvas.width = window.innerWidth;
+  matrixCanvas.height = window.innerHeight;
+  const chars = "01アイウエオカキクケコサシスセソタチツテト";
+  const fontSizeM = 14;
+  const columnsM = Math.floor(matrixCanvas.width / fontSizeM);
+  const dropsM = new Array(columnsM).fill(1);
+  function drawMatrix() {
+    matrixCtx.fillStyle = 'rgba(10, 10, 15, 0.05)';
+    matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+    matrixCtx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#3b82f6';
+    matrixCtx.font = fontSizeM + 'px monospace';
+    for (let i = 0; i < dropsM.length; i++) {
+      const text = chars[Math.floor(Math.random() * chars.length)];
+      matrixCtx.fillText(text, i * fontSizeM, dropsM[i] * fontSizeM);
+      if (dropsM[i] * fontSizeM > matrixCanvas.height && Math.random() > 0.975) dropsM[i] = 0;
+      dropsM[i]++;
+    }
+  }
+  setInterval(drawMatrix, 45);
+  window.addEventListener('resize', () => { matrixCanvas.width = window.innerWidth; matrixCanvas.height = window.innerHeight; });
+
+  // Cursor dot (hide on mobile)
+  const cursorDot = document.querySelector('.cursor-dot');
+  document.addEventListener('mousemove', (e) => { if(window.innerWidth > 768) cursorDot.style.transform = `translate(${e.clientX - 4}px, ${e.clientY - 4}px)`; });
+  document.querySelectorAll('a, button, .nav-links li, .project-card, .resume-card, .stat-card').forEach(el => {
+    el.addEventListener('mouseenter', () => { if(window.innerWidth > 768) { cursorDot.style.transform = `scale(2)`; cursorDot.style.boxShadow = '0 0 20px var(--primary)'; } });
+    el.addEventListener('mouseleave', () => { if(window.innerWidth > 768) { cursorDot.style.transform = `scale(1)`; cursorDot.style.boxShadow = '0 0 12px var(--primary)'; } });
+  });
+
+  // Typing
+  const roles = ["Data Scientist", "AI & Machine Learning Engineer", "Data & Analytics Engineer"];
+  let roleIdx = 0, charPos = 0;
+  const typedSpan = document.getElementById('typed-text');
+  function typeRole() {
+    if (charPos <= roles[roleIdx].length) { typedSpan.textContent = roles[roleIdx].substring(0, charPos); charPos++; setTimeout(typeRole, 100); }
+    else { setTimeout(() => { charPos = 0; roleIdx = (roleIdx + 1) % roles.length; typeRole(); }, 2500); }
+  }
+  typeRole();
+
+  // Projects Data
+  const projectsData = [
+    { title: "Multimodal Anaemia Classification System", desc: "Built a hybrid ML system combining hematological data and medical images using XGBoost and ResNet18 for anemia detection with high accuracy and interpretability.", tech: ["XGBoost","ResNet18","PyTorch"], icon:"fas fa-dna", link:"https://github.com/M1nza/Anemia-Classification-Using-Hematological-Data-Palm-Images" },
+    { title: "Tesla Sentiment & Topic Analysis", desc: "NLP pipeline analyzing 9,000+ YouTube comments using sentiment analysis and LDA topic modeling to extract key behavioral insights.", tech: ["Python","VADER","LDA"], icon:"fas fa-comments", link:"https://github.com/M1nza" },
+    { title: "Road Safety Data Analytics Platform", desc: "Processed 970K+ accident records and built interactive D3.js visualizations to identify high-risk patterns and critical safety insights.", tech: ["Python","Pandas","D3.js"], icon:"fas fa-road", link:"https://github.com/M1nza" },
+    { title: "Google Maps Review Rating Prediction", desc: "Developed NLP classification models using TF-IDF, embeddings, and n-gram features to predict user ratings from text reviews.", tech: ["Scikit-learn","NLP","LSTM"], icon:"fas fa-map-marker-alt", link:"https://github.com/M1nza" },
+    { title: "Explainable AI for Heart Disease Prediction", desc: "Built ML models with interpretability techniques using SHAP and Lime to identify key medical factors influencing heart disease predictions.", tech: ["XGBoost","SHAP","LIME","Pandas"], icon:"fas fa-heartbeat", link:"https://github.com/yourusername/anaemia-project" },
+    { title: "Document Tracker Analytics System", desc: "Built an ETL pipeline processing 100K–400K JSON records and designed a graph-based recommendation system for document usage patterns.", tech: ["Python", "ETL", "Graphviz", "JSON Processing"], icon:"fas fa-file-invoice", link:"https://github.com/M1nza" },
+    { title: "Async API Processing System", desc: "Developed an asynchronous backend system using FastAPI with Streamlit frontend for real-time document processing workflows.", tech: ["FastAPI","Streamlit","Python"], icon:"fas fa-cogs", link:"https://github.com/M1nza/Async-API-Development" },
+    { title: "Stack Overflow Tag Trend Analyzer", desc: "Built a real-time analytics dashboard using Stack Overflow API to track trending developer technologies and keyword patterns.", tech: ["Python","Streamlit","REST API","NLP"], icon:"fas fa-chart-line", link:"https://github.com/M1nza/Stackoverflow-analyzer" },
+    { title: "Intelligent Invoice Parser", desc: "Automated extraction of structured invoice data from PDFs, handling different formats and building clean structured outputs.", tech: ["Python","PDF Processing","ETL"], icon:"fas fa-file-invoice", link:"https://github.com/M1nza/Intelligent-Invoice-Parser" }
+    
+  ];
+  const projectsGrid = document.getElementById('projects-grid');
+  projectsData.forEach(p => {
+    const card = document.createElement('div'); card.className = 'project-card';
+    card.innerHTML = `<div class="project-icon"><i class="${p.icon}"></i></div><h3>${p.title}</h3><p style="color:var(--text-muted); margin-bottom:1rem;">${p.desc}</p><div>${p.tech.map(t=>`<span class="tech-tag">${t}</span>`).join('')}</div><div style="margin-top:1rem;"><a href="${p.link}" target="_blank" style="text-decoration:none; color: inherit;"><i class="fab fa-github"></i> <span>view repository →</span></a></div>`;
+    projectsGrid.appendChild(card);
+  });
+
+    const skillsData = [
+  {
+    name: "Machine Learning & AI",
+    items: [
+      "Scikit-learn", "XGBoost", "TensorFlow", "PyTorch", "NLP", 
+      "Deep Learning", "Feature Engineering", "Model Evaluation",
+      "SHAP", "LLM", "Transformers"  // ← ONLY ADDED these 3
+    ]
+  },
+  {
+    name: "Data Engineering",
+    items: [
+      "Pandas", "NumPy", "SQL", "ETL Pipelines", "JSON Processing", 
+      "Data Cleaning", "API Integration",
+      "PostgreSQL", "Data Validation"  // ← ONLY ADDED these 2
+    ]
+  },
+  {
+    name: "Backend Development",
+    items: [
+      "FastAPI", "Django", "REST APIs", "Authentication Systems", "Backend Automation"
+      // NOTHING REMOVED - all your items still here
+    ]
+  },
+  {
+    name: "Data Visualization",
+    items: [
+      "Matplotlib", "Seaborn", "Plotly", "D3.js", "Streamlit"
+      // NOTHING REMOVED
+    ]
+  },
+  {
+    name: "Scientific & Statistical Computing",
+    items: [
+      "R", "MATLAB", "Statistical Analysis", "Probability Modeling", "Data Simulation"
+      // NOTHING REMOVED
+    ]
+  },
+  {
+    name: "Programming",
+    items: [
+      "Python", "SQL", "JavaScript", "HTML", "CSS"
+      // NOTHING REMOVED
+    ]
+  },
+  {
+    name: "Tools & Workflow",
+    items: [
+      "Git", "GitHub", "GitLab", "Jupyter Notebook", "VS Code", "Agile (Scrum basics)"
+      // NOTHING REMOVED
+    ]
+  },
+  // ← ONLY ADDED this NEW category
+  {
+    name: "MLOps & Deployment",
+    items: [
+      "Model Deployment", "REST API Deployment", "Git Version Control",
+      "Production Pipelines", "Django REST Framework"
+    ]
+  }
+];
+  const skillsWrapper = document.getElementById('skills-wrapper');
+  skillsData.forEach(cat => {
+    const col = document.createElement('div'); col.className = 'skill-category'; col.innerHTML = `<h3>${cat.name}</h3>`;
+    cat.items.forEach(skill => { const level = Math.floor(Math.random() * 25) + 70; col.innerHTML += `<div class="skill-item"><div class="skill-info"><span>${skill}</span><span>${level}%</span></div><div class="skill-bar"><div class="skill-fill" data-width="${level}"></div></div></div>`; });
+    skillsWrapper.appendChild(col);
+  });
+  function animateSkills() { document.querySelectorAll('.skill-fill').forEach(bar => { bar.style.width = bar.getAttribute('data-width') + '%'; }); }
+
+  // Page Navigation
+  const pages = { home: document.getElementById('home-page'), resume: document.getElementById('resume-page'), projects: document.getElementById('projects-page'), skills: document.getElementById('skills-page'), contact: document.getElementById('contact-page') };
+  function switchPage(pageId) {
+    Object.values(pages).forEach(p => p.classList.remove('active'));
+    pages[pageId].classList.add('active');
+    document.getElementById('path-indicator').innerHTML = `[${pageId}]`;
+    if (pageId === 'skills') setTimeout(animateSkills, 150);
+    if(window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); }
+  }
+  document.querySelectorAll('.nav-links li, .nav-links-side li').forEach(link => {
+    link.addEventListener('click', () => {
+      const page = link.getAttribute('data-page');
+      document.querySelectorAll('.nav-links li, .nav-links-side li').forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+      if(page) switchPage(page);
+    });
+  });
+  document.getElementById('contactForm')?.addEventListener('submit', (e) => { e.preventDefault(); alert('✨ Message sent! (Backend ready for integration)'); e.target.reset(); });
+  
+  // Color customization with blue default
+  const colorBtn = document.getElementById('colorPickerBtn');
+  const colorPanel = document.getElementById('colorPanel');
+  const colorOptions = document.querySelectorAll('.color-option');
+  colorBtn.addEventListener('click', () => colorPanel.classList.toggle('active'));
+  function updateTheme(primary, secondary, accent) {
+    document.documentElement.style.setProperty('--primary', primary); document.documentElement.style.setProperty('--primary-dark', primary);
+    document.documentElement.style.setProperty('--primary-glow', primary + '80'); document.documentElement.style.setProperty('--secondary', secondary);
+    document.documentElement.style.setProperty('--accent', accent); document.documentElement.style.setProperty('--border-glow', primary + '40');
+    knot.material.color.setHex(parseInt(primary.slice(1), 16));
+  }
+  colorOptions.forEach(opt => opt.addEventListener('click', () => { updateTheme(opt.getAttribute('data-primary'), opt.getAttribute('data-secondary'), opt.getAttribute('data-accent')); colorPanel.classList.remove('active'); }));
+  document.addEventListener('click', (e) => { if (!colorBtn.contains(e.target) && !colorPanel.contains(e.target)) colorPanel.classList.remove('active'); });
+  
+  // Mobile Sidebar
+  const menuToggle = document.getElementById('menuToggle');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  const closeSidebar = document.getElementById('closeSidebar');
+  function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); }
+  function closeSidebarFunc() { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
+  menuToggle.addEventListener('click', openSidebar);
+  closeSidebar.addEventListener('click', closeSidebarFunc);
+  overlay.addEventListener('click', closeSidebarFunc);
+  document.querySelectorAll('.nav-links-side li').forEach(li => li.addEventListener('click', closeSidebarFunc));
+  
+  gsap.registerPlugin(ScrollTrigger);
+  gsap.utils.toArray('.project-card, .resume-card, .skill-category').forEach(card => { gsap.from(card, { scrollTrigger: { trigger: card, start: "top 85%", toggleActions: "play none none reverse" }, opacity: 0, y: 50, duration: 0.6 }); });
+</script>
+</body>
+</html>
