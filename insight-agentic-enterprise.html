@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>JAiD – Reconciliation at scale</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='70' font-size='100' text-anchor='middle' fill='%236f87d6' font-family='Arial'%3E%D8%AC%3C/text%3E%3C/svg%3E">
+
+  <meta name="description" content="Building operational visibility in reinsurance – from fragmented processes to intelligent control.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ===== FULL STYLES FROM MAIN PAGE ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-deep: #0D0F12;
+      --bg-rich: #14171C;
+      --bg-surface: #1C2026;
+      --bg-card: #242932;
+      --accent-burgundy: #6f87d6;
+      --accent-burgundy-light: #6f87d6;
+      --accent-burgundy-glow: #2d425b;
+      --text-primary: #FFFFFF;
+      --text-secondary: #D0D4DC;
+      --text-tertiary: #8A9098;
+      --border-subtle: rgba(255, 255, 255, 0.06);
+      --border-burgundy: #6f87d6;
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-serif: 'Playfair Display', Georgia, serif;
+      --nav-height: 88px;
+      --font-serif-metrics: 'IBM Plex Serif', 'Merriweather', Georgia, serif;
+      --container-max: 1400px;
+      --transition-smooth: cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      --transition-bounce: cubic-bezier(0.34, 1.2, 0.64, 1);
+    }
+
+    body {
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      overflow-x: hidden;
+      font-size: 18px;
+    }
+
+    .preloader {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-deep);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 2rem;
+      transition: opacity 0.8s, visibility 0.8s;
+    }
+    .preloader.hide { opacity: 0; visibility: hidden; }
+
+    .preloader-ring {
+      width: 80px;
+      height: 80px;
+      border: 3px solid var(--border-burgundy);
+      border-top-color: var(--accent-burgundy);
+      border-right-color: var(--accent-burgundy-light);
+      border-radius: 50%;
+      animation: crazySpin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite, ringPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes crazySpin {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.1); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+    @keyframes ringPulse {
+      0%, 100% { box-shadow: 0 0 0px var(--accent-burgundy); }
+      50% { box-shadow: 0 0 25px var(--accent-burgundy); }
+    }
+
+    .preloader-text {
+      font-family: var(--font-serif);
+      font-size: 2rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent-burgundy);
+      animation: textPulse 1.2s ease-in-out infinite, textGlow 2s ease-in-out infinite;
+      position: relative;
+    }
+    @keyframes textPulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.08); opacity: 1; letter-spacing: 0.25em; }
+    }
+    @keyframes textGlow {
+      0%, 100% { text-shadow: 0 0 5px var(--accent-burgundy); }
+      50% { text-shadow: 0 0 20px var(--accent-burgundy), 0 0 10px var(--accent-burgundy-light); }
+    }
+
+    .preloader-line {
+      width: 200px;
+      height: 2px;
+      background: var(--border-subtle);
+      overflow: hidden;
+      border-radius: 4px;
+      position: relative;
+    }
+    .preloader-progress { 
+      width: 0%; 
+      height: 100%; 
+      background: linear-gradient(90deg, var(--accent-burgundy), var(--accent-burgundy-light), var(--accent-burgundy));
+      background-size: 200% 100%;
+      animation: shimmerProgress 1.5s linear infinite;
+      transition: width 0.1s linear;
+    }
+    @keyframes shimmerProgress {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .preloader-dots {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .preloader-dots span {
+      width: 8px;
+      height: 8px;
+      background: var(--accent-burgundy);
+      border-radius: 50%;
+      animation: bounceDot 0.8s ease-in-out infinite;
+    }
+    .preloader-dots span:nth-child(1) { animation-delay: 0s; }
+    .preloader-dots span:nth-child(2) { animation-delay: 0.15s; }
+    .preloader-dots span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes bounceDot {
+      0%, 100% { transform: translateY(0); opacity: 0.4; }
+      50% { transform: translateY(-10px); opacity: 1; }
+    }
+
+    .bg-ornament {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .bg-gradient {
+      position: absolute;
+      top: -20%;
+      right: -10%;
+      width: 60%;
+      height: 80%;
+      background: radial-gradient(ellipse, var(--accent-burgundy-glow), transparent 70%);
+      filter: blur(100px);
+      animation: slowDrift 25s ease-in-out infinite alternate;
+    }
+    @keyframes slowDrift {
+      0% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+      100% { transform: translate(3%, 3%) scale(1.1); opacity: 0.5; }
+    }
+    .grid-pattern {
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(var(--border-subtle) 1px, transparent 1px),
+                        linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+      background-size: 60px 60px;
+      opacity: 0.15;
+    }
+
+    .floating-elements {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+    .float-item {
+      position: absolute;
+      font-size: 2rem;
+      color: var(--accent-burgundy);
+      animation: floatRotate 12s ease-in-out infinite;
+      opacity: 0.4;
+    }
+    @keyframes floatRotate {
+      0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 0.2; text-shadow: 0 0 0px var(--accent-burgundy); }
+      50% { transform: translate(20px, -25px) rotate(12deg) scale(1.15); opacity: 0.7; text-shadow: 0 0 12px var(--accent-burgundy); }
+      100% { transform: translate(-10px, 10px) rotate(0deg) scale(1); opacity: 0.2; text-shadow: 0 0 0px var(--accent-burgundy); }
+    }
+    .float-item:nth-child(1) { top: 12%; left: 3%; animation-duration: 15s; }
+    .float-item:nth-child(2) { top: 20%; right: 5%; animation-duration: 19s; animation-delay: -2s; }
+    .float-item:nth-child(3) { bottom: 25%; left: 8%; animation-duration: 17s; animation-delay: -4s; }
+    .float-item:nth-child(4) { top: 55%; right: 10%; animation-duration: 13s; animation-delay: -1s; }
+    .float-item:nth-child(5) { bottom: 30%; right: 20%; animation-duration: 16s; animation-delay: -3s; }
+    .float-item:nth-child(6) { top: 45%; left: 15%; animation-duration: 21s; animation-delay: -5s; }
+    .float-item:nth-child(7) { top: 70%; left: 25%; animation-duration: 12s; animation-delay: -2s; }
+    .float-item:nth-child(8) { bottom: 15%; left: 35%; animation-duration: 14s; animation-delay: -6s; }
+
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      height: var(--nav-height);
+      display: flex;
+      align-items: center;
+      padding: 0 6%;
+      transition: all 0.4s ease;
+      background: transparent;
+    }
+    nav.scrolled {
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-burgundy);
+    }
+    .nav-container {
+      width: 100%;
+      max-width: var(--container-max);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      font-family: var(--font-mono);
+      font-size: 2rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+    .logo span { color: var(--accent-burgundy); }
+    .nav-links { display: flex; gap: 2.8rem; list-style: none; }
+    .nav-links a {
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.25s;
+      position: relative;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent-burgundy);
+      transition: width 0.35s var(--transition-smooth);
+    }
+    .nav-links a:hover { color: var(--text-primary); }
+    .nav-links a:hover::after { width: 100%; }
+    .nav-cta {
+      border: 1px solid var(--accent-burgundy);
+      padding: 0.5rem 1.5rem;
+      border-radius: 60px;
+      color: var(--accent-burgundy) !important;
+      transition: all 0.3s var(--transition-bounce);
+    }
+    .nav-cta:hover { background: var(--accent-burgundy); color: var(--bg-deep) !important; transform: translateY(-2px); box-shadow: 0 5px 15px var(--accent-burgundy-glow); }
+    .mobile-toggle { display: none; background: none; border: none; color: white; font-size: 1.6rem; cursor: pointer; }
+
+    section { padding: 6rem 6%; position: relative; z-index: 2; }
+    .section-container { max-width: var(--container-max); margin: 0 auto; }
+    .section-tag { font-size: 0.8rem; letter-spacing: 0.2em; color: var(--accent-burgundy); margin-bottom: 1rem; display: inline-block; }
+    .section-title { font-size: clamp(2.2rem, 4.5vw, 3.5rem); font-family: var(--font-serif); font-weight: 500; letter-spacing: -0.01em; margin-bottom: 1.5rem; }
+    .section-title .accent { color: var(--accent-burgundy); }
+
+    /* ===== INSIGHT DETAIL STYLES ===== */
+    .back-link {
+      display: inline-block;
+      margin-bottom: 2rem;
+      color: var(--accent-burgundy);
+      text-decoration: none;
+      font-size: 1rem;
+      transition: 0.2s;
+      font-weight: 500;
+    }
+    .back-link:hover {
+      color: var(--text-primary);
+      transform: translateX(-4px);
+    }
+
+    .article-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .article-content .insight-category {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent-burgundy);
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .article-content h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 500;
+      line-height: 1.1;
+      margin: 1rem 0 1.5rem;
+    }
+
+    .article-content p {
+      font-size: 1.15rem;
+      line-height: 1.8;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+    }
+
+    .article-content h2 {
+      font-family: var(--font-serif);
+      font-size: 1.8rem;
+      font-weight: 500;
+      margin: 2.5rem 0 1rem;
+      color: var(--text-primary);
+    }
+
+    .article-content h3 {
+      font-family: var(--font-serif);
+      font-size: 1.4rem;
+      font-weight: 500;
+      margin: 2rem 0 0.8rem;
+      color: var(--text-primary);
+    }
+
+    .article-content ul, .article-content ol {
+      padding-left: 1.8rem;
+      margin-bottom: 1.5rem;
+      color: var(--text-secondary);
+      font-size: 1.15rem;
+      line-height: 1.8;
+    }
+    .article-content li { margin-bottom: 0.4rem; }
+    .article-content blockquote {
+      border-left: 4px solid var(--accent-burgundy);
+      padding-left: 1.5rem;
+      margin: 2rem 0;
+      font-style: italic;
+      color: var(--text-primary);
+      font-size: 1.2rem;
+    }
+
+    .article-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 16px;
+      margin: 1.5rem 0;
+      border: 1px solid var(--border-subtle);
+    }
+
+    /* Stats grid – from the Word table */
+/* Stats grid – clean, continuous lines like the Services grid */
+.stats-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;                         /* 1px gap reveals the background as the line */
+  background: var(--border-burgundy); /* The line color */
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 2rem 0;
+  border: 1px solid var(--border-burgundy);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 1.8rem 1rem;
+  min-height: 140px;
+  background: var(--bg-rich);
+}
+
+.stat-number {
+  font-family: var(--font-serif);
+  font-size: 2.4rem;
+  font-weight: 600;
+  color: var(--accent-burgundy);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+  max-width: 90%;
+  line-height: 1.4;
+  margin-top: 0.3rem;
+
+  /* --- KEY FIX --- */
+  min-height: 3.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Responsive: 2 columns on tablet/mobile */
+@media (max-width: 768px) {
+  .stats-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .stat-item {
+    min-height: 120px;
+  }
+      .stat-item:nth-child(2) { border-right: none; }
+      .stat-item:nth-child(3) { border-bottom: none; }
+      .stat-item:nth-child(4) { border-bottom: none; }
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background: var(--bg-rich);
+      border-top: 1px solid var(--border-burgundy);
+      padding: 4rem 6% 2rem;
+      position: relative;
+      z-index: 2;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+      gap: 2rem;
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .footer-logo { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary); }
+    .footer-logo span { color: var(--accent-burgundy); }
+    .footer-tagline { color: var(--text-tertiary); font-size: 0.9rem; line-height: 1.5; margin: 0; }
+    .footer-col h4 { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 1.25rem; }
+    .footer-col p { margin-bottom: 0.6rem; font-size: 0.9rem; line-height: 1.5; color: var(--text-tertiary); }
+    .footer-col p a { color: var(--text-tertiary); text-decoration: none; transition: color 0.2s ease; }
+    .footer-col p a:hover { color: var(--accent-burgundy); }
+    .footer-bottom {
+      max-width: var(--container-max);
+      margin: 2.5rem auto 0;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      text-align: center;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .footer-grid { grid-template-columns: repeat(2, 1fr); gap: 2rem; }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .mobile-toggle { display: block; }
+      .footer-grid { grid-template-columns: 1fr; text-align: center; }
+      body { font-size: 16px; }
+      .nav-links.mobile-open {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: var(--nav-height);
+        left: 0;
+        right: 0;
+        background: var(--bg-deep);
+        backdrop-filter: blur(24px);
+        padding: 2rem;
+        gap: 2rem;
+        border-bottom: 1px solid var(--border-burgundy);
+      }
+      .article-content p, .article-content ul { font-size: 1rem; }
+      .article-content h1 { font-size: 1.8rem; }
+      section { padding: 4rem 5%; }
+      .stats-grid-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== PRELOADER ===== -->
+<!-- <div class="preloader" id="preloader">
+  <div class="preloader-ring"></div>
+  <div class="preloader-text">JAiD</div>
+  <div class="preloader-line"><div class="preloader-progress" id="progressFill"></div></div>
+  <div class="preloader-dots">
+    <span></span><span></span><span></span>
+  </div>
+</div> -->
+
+<!-- ===== BACKGROUND ORNAMENTS ===== -->
+<div class="bg-ornament"><div class="bg-gradient"></div><div class="grid-pattern"></div></div>
+<div class="floating-elements">
+  <div class="float-item">◈</div><div class="float-item">◇</div><div class="float-item">○</div>
+  <div class="float-item">▣</div><div class="float-item">⌘</div><div class="float-item">⎔</div>
+  <div class="float-item">✦</div><div class="float-item">✧</div>
+</div>
+
+<!-- ===== NAVIGATION ===== -->
+<nav id="navbar">
+  <div class="nav-container">
+    <a href="index.html" class="logo" style="font-size: 50px;">J<span>Ai</span>D</a>
+    <ul class="nav-links" id="navMenu">
+      <li><a href="index.html#home">Home</a></li>
+      <li><a href="index.html#services">Services</a></li>
+      <li><a href="index.html#insights">Insights</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+      <li><a href="index.html#ecosystem" class="nav-cta">Ecosystem</a></li>
+    </ul>
+    <button class="mobile-toggle" id="menuToggle">☰</button>
+  </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main>
+  <section id="insight-detail" style="background:var(--bg-rich); padding: calc(var(--nav-height) + 3rem) 6% 4rem; min-height: 100vh;">
+    <div class="section-container">
+
+      <a href="index.html#insights" class="back-link">← Back to Insights</a>
+
+      <div class="article-content">
+
+
+    
+        <!-- Header Image – UPDATE THE src ATTRIBUTE WITH YOUR UPLOADED IMAGE URL -->
+        <img src="images/image1.png" alt="Reinsurance operations dashboard concept" style="width:100%;">
+        
+        <!-- Category -->
+        <div class="insight-category">Data Strategy </div>
+
+
+        <!-- Title -->
+        <h1>Building Operational Visibility in Reinsurance: From Fragmented Processes to Intelligent Control</h1>
+
+        <!-- Intro paragraph -->
+        <p>Reinsurance operations are inherently complex with multiple market participants, long transaction lifecycles, installment-based premium collections, and extensive email-driven communication often create an environment where critical information becomes fragmented across systems and individuals.</p>
+
+        <p>For many organizations, the challenge is not a lack of data. It is the inability to translate operational activity into visibility, control, and timely decision-making.</p>
+
+        <p>Recently, we worked with a DIFC-based reinsurance broker facing precisely this challenge. Business opportunities were being managed across email chains. Tracking the status of placements, monitoring premium collections, managing installment due dates, and understanding market participation required significant manual effort.</p>
+
+        <p>The organization needed a practical solution that could provide a single source of truth for its placement and payment activities while preserving the flexibility required in a dynamic reinsurance environment.</p>
+
+        <!-- ===== STATS GRID (from the Word table) ===== -->
+        <div class="stats-grid-4">
+          <div class="stat-item">
+            <div class="stat-number">100%</div>
+            <div class="stat-label">Business visibility </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">O</div>
+            <div class="stat-label">Manual email tracking </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">Real-time</div>
+            <div class="stat-label">Renewal alerts</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">6+</div>
+            <div class="stat-label">Live business reports</div>
+          </div>
+        </div>
+
+        <!-- ===== START OF CONTENT ===== -->
+
+        <h2>Starting with the Process, Not the Technology</h2>
+        <p>Our approach to transformation always begins with understanding how the business operates. Before introducing technology, we conducted a detailed assessment of the end-to-end reinsurance workflow, including:</p>
+        <ul>
+          <li>Business placement processes</li>
+          <li>Market participation tracking</li>
+          <li>Policy binding activities</li>
+          <li>Premium collection cycles</li>
+          <li>Payment follow-ups</li>
+          <li>Reporting and management requirements</li>
+        </ul>
+        <p>This allowed us to identify where operational friction existed and where information was being lost between processes.</p>
+
+        <!-- Body Image – UPDATE THE src ATTRIBUTE -->
+        <img src="images/image2.png" alt="Workflow automation diagram for reinsurance" style="width:100%;">
+
+        <h2>Creating a Foundation for Visibility</h2>
+        <p>A centralized communication model was introduced by establishing a dedicated business mailbox through which placement activities could be captured consistently. From there, workflow automation was implemented to transform email-driven interactions into structured operational data touch points.</p>
+
+        <p>Business transactions, policy details, payment information, and market participation records were captured and organized into a centralized tracking platform designed specifically around the client's operating model. Standardized data structures and validation mechanisms were embedded into the solution to improve consistency, data quality, and reporting reliability.</p>
+
+        <h2>From Tracking Activities to Managing Outcomes</h2>
+        <p>The platform enabled the organization to monitor:</p>
+        <ul>
+          <li>Business offered and placed across market participants</li>
+          <li>Policy binding status</li>
+          <li>Co-insurer participation and apportionment levels</li>
+          <li>Premium due dates and installment schedules</li>
+          <li>Outstanding receivables</li>
+          <li>Payment follow-up requirements</li>
+          <li>Renewal activities</li>
+        </ul>
+        <p>More importantly, the organization moved from reactive management to proactive operational control. The availability of structured data also enabled the development of management reporting and operational dashboards, providing visibility into business activity, receivables, and market performance.</p>
+
+        <h2>The Value of Intelligent Operations</h2>
+        <p>The most significant outcome of the initiative was not the implementation of a new system. It was the creation of operational transparency.</p>
+
+        <p>The organization gained:</p>
+        <ul>
+          <li>Greater visibility into business placement activities</li>
+          <li>Improved oversight of market participation and vendor relationships</li>
+          <li>Enhanced control over premium collections and payment cycles</li>
+          <li>Better decision-making through reliable reporting and analytics</li>
+          <li>A scalable operational foundation capable of supporting future growth</li>
+        </ul>
+
+        <h2>A Broader Industry Lesson</h2>
+        <p>Many organizations continue to manage critical operations through disconnected processes and manual interventions. Over time, these inefficiencies create operational risk, reduce visibility, and limit the ability to make timely decisions.</p>
+
+        <p>Digital transformation is often perceived as implementing new technologies. In reality, its greatest value frequently comes from designing better ways of working, creating trusted data foundations, and enabling organizations to manage their operations with confidence and clarity.</p>
+
+        <p style="font-style: italic; color: var(--accent-burgundy); margin-top: 2rem;">At JAiD, we believe the most effective solutions are those that align technology with business reality and deliver measurable operational value.</p>
+
+        <p style="font-weight: 600; color: var(--text-primary);">JAiD — The Standard of Data &amp; AI Excellence.</p>
+
+      </div> <!-- end .article-content -->
+    </div>
+  </section>
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-logo" style="font-size: 50px;">J<span>Ai</span>D</div>
+      <p class="footer-tagline" style="font-size: 20px;">جَيِّد — the standard of data & AI excellence.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Data & Analytics</h4>
+      <p>Data Engineering</p>
+      <p>Business Intelligence</p>
+    </div>
+    <div class="footer-col">
+      <h4>AI & Engineering</h4>
+      <p>Python Development</p>
+      <p>Website Creation</p>
+    </div>
+    <div class="footer-col">
+      <h4>Operations</h4>
+      <p>Process Optimization</p>
+      <p>Workflow Automation</p>
+    </div>
+    <div class="footer-col">
+      <h4>Connect</h4>
+      <p><a href="mailto:info@jaidsolutions.com">info@jaidsolutions.com</a></p>
+      <p><a href="https://www.linkedin.com/company/jaid-solution/">LinkedIn</a></p>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2026 JAiD — Autonomous intelligence.</div>
+</footer>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+  // Preloader
+  let progress = 0;
+  const progressFill = document.getElementById('progressFill');
+  const preloader = document.getElementById('preloader');
+  const interval = setInterval(() => {
+    progress += Math.random() * 12;
+    if (progress >= 100) { 
+      progress = 100; 
+      clearInterval(interval); 
+      setTimeout(() => { 
+        preloader.classList.add('hide'); 
+        setTimeout(() => { preloader.style.display = 'none'; }, 600); 
+      }, 400); 
+    }
+    progressFill.style.width = progress + '%';
+  }, 100);
+
+  // Navbar scroll effect
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => { 
+    navbar.classList.toggle('scrolled', window.scrollY > 40); 
+  });
+
+  // Mobile menu toggle
+  const toggle = document.getElementById('menuToggle');
+  const menu = document.getElementById('navMenu');
+  toggle.addEventListener('click', () => menu.classList.toggle('mobile-open'));
+  document.querySelectorAll('.nav-links a').forEach(link => { 
+    link.addEventListener('click', () => menu.classList.remove('mobile-open')); 
+  });
+</script>
+
+</body>
+</html>
